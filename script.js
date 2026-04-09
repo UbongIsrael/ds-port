@@ -98,6 +98,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ──────────── GitHub Repo Fetcher ────────────
+async function fetchGitHubRepos() {
+    const cached = localStorage.getItem('gh_repos');
+    const ts = localStorage.getItem('gh_repos_ts');
+
+    if (cached && ts && Date.now() - Number(ts) < 60 * 60 * 1000) {
+        return JSON.parse(cached);
+    }
+
+    const res = await fetch('https://api.github.com/users/UbongIsrael/repos?sort=updated&per_page=50');
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    const data = await res.json();
+    localStorage.setItem('gh_repos', JSON.stringify(data));
+    localStorage.setItem('gh_repos_ts', String(Date.now()));
+    return data;
+}
+
+function buildStack(repo) {
+    const parts = [];
+    if (repo.language) parts.push(repo.language);
+    if (repo.topics && repo.topics.length) {
+        repo.topics.slice(0, 2).forEach(t =>
+            parts.push(t.charAt(0).toUpperCase() + t.slice(1))
+        );
+    }
+    return parts.join(' · ') || '—';
+}
+
 // ──────────── Terminal Logic ────────────
 function initTerminal() {
     const input = document.getElementById('terminal-input');
@@ -106,7 +134,7 @@ function initTerminal() {
 
     if (!input || !output) return;
 
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
             const cmd = input.value.trim().toLowerCase();
             if (!cmd) return;
@@ -115,9 +143,15 @@ function initTerminal() {
             appendLine(`<span class="prompt-prefix">sheikh@labs:~$</span> ${escapeHtml(input.value.trim())}`, 'terminal__line--prompt');
             input.value = '';
 
-            // Process
-            const response = processCommand(cmd);
-            typewriterOutput(response, output, body);
+            // ls is async — handle separately
+            if (cmd === 'ls') {
+                appendLine('fetching repos...', 'terminal__line--muted', true);
+                const response = await lsOutput();
+                typewriterOutput(response, output, body);
+            } else {
+                const response = processCommand(cmd);
+                typewriterOutput(response, output, body);
+            }
         }
     });
 
@@ -128,7 +162,7 @@ function initTerminal() {
 function processCommand(cmd) {
     switch (cmd) {
         case 'ls':
-            return lsOutput();
+            return []; // handled async in the event listener
         case 'whoami':
             return whoamiOutput();
         case 'contact':
@@ -147,18 +181,32 @@ function processCommand(cmd) {
 
 // ──────────── Command Outputs ────────────
 
-function lsOutput() {
-    const projects = [
-        { name: 'trading-intel-mcp', stack: 'Python · MCP', desc: 'Tier S grant · 19 tools · Real-time markets, DCF valuation, technical analysis' },
-        { name: 'meteora-damm-v2-pool-viewer', stack: 'HTML · Solana', desc: 'Explore Meteora DAMM-V2 liquidity pools on-chain' },
-        { name: 'solana-tracker-api', stack: 'Python', desc: 'Token and wallet analytics via Solana Tracker APIs' },
-        { name: 'nft-contracts', stack: 'Solidity', desc: 'Open-source NFT smart contracts (Buildship fork)' },
-        { name: 'ms-email-sort', stack: 'HTML · JS', desc: 'Email analyzer for Microsoft-hosted domains' },
-        { name: 'dsautomation', stack: 'n8n · CSS', desc: 'Automation hub — workflow orchestration at automation.digitalsheikh.com' },
-        { name: 'supermart-system', stack: 'Python', desc: 'Supermarket management with admin auth and pricing logic' },
-        { name: 'planet-growth', stack: 'PHP', desc: 'Web app growth system' },
-        { name: 'firstride', stack: 'Infra', desc: 'IT infrastructure for Ocean Wealth Transport & Logistics e-hailing platform' },
+async function lsOutput() {
+    const staticProjects = [
+        {
+            name: 'firstride',
+            stack: 'Infra',
+            desc: 'IT infrastructure for Ocean Wealth Transport & Logistics e-hailing platform',
+        },
     ];
+
+    let githubProjects = [];
+
+    try {
+        const repos = await fetchGitHubRepos();
+        githubProjects = repos.map((repo) => ({
+            name: repo.name,
+            stack: buildStack(repo),
+            desc: repo.description || '—',
+        }));
+    } catch (err) {
+        console.error(err);
+        githubProjects = [
+            { name: '⚠ fetch failed', stack: '', desc: 'Could not reach GitHub API. Check connection.' },
+        ];
+    }
+
+    const projects = [...githubProjects, ...staticProjects];
 
     // Build table HTML
     let tableHtml = '<div class="terminal__table">';
