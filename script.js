@@ -194,11 +194,13 @@ async function lsOutput() {
 
     try {
         const repos = await fetchGitHubRepos();
-        githubProjects = repos.map((repo) => ({
-            name: repo.name,
-            stack: buildStack(repo),
-            desc: repo.description || '—',
-        }));
+        githubProjects = repos
+            .filter((repo) => repo.description && repo.description.trim() !== '')
+            .map((repo) => ({
+                name: repo.name,
+                stack: buildStack(repo),
+                desc: repo.description,
+            }));
     } catch (err) {
         console.error(err);
         githubProjects = [
@@ -206,7 +208,7 @@ async function lsOutput() {
         ];
     }
 
-    const projects = [...githubProjects, ...staticProjects];
+    const projects = [...staticProjects, ...githubProjects];
 
     // Build table HTML
     let tableHtml = '<div class="terminal__table">';
