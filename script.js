@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const text = 'Digital Sheikh.';
+    const text = 'I Build the Infrastructure Scaling Startups Run On.';
     let i = 0;
     const speed = 90; // ms per character
 
