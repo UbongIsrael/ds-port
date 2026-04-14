@@ -1152,6 +1152,13 @@ p {
     font-size: 0.85rem;
 }
 
+/* ── Sub-page CTA Block ──────────────────────────── */
+.subpage-cta {
+    max-width: 640px;
+    margin: 4rem auto;
+    text-align: center;
+}
+
 /* ========================================
    RESPONSIVE
    ======================================== */

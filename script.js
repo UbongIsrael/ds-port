@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroBody = document.querySelector('.hero__body');
     const heroCta = document.querySelector('.hero__cta');
 
+    // Detect the current page and choose the typewriter string accordingly
+    const page = window.location.pathname;
+    let text = 'I Build the Infrastructure Scaling Startups Run On.'; // default: index
+    if (page.includes('studios')) {
+        text = 'Motion. VFX. 3D.';
+    } else if (page.includes('media')) {
+        text = 'Content that builds empires.';
+    }
+
     // Hide hero elements below the headline until typewriter finishes
     [heroSubtitle, heroBody, heroCta].forEach((el) => {
         if (el) {
@@ -21,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const text = 'I Build the Infrastructure Scaling Startups Run On.';
     let i = 0;
     const speed = 90; // ms per character
 
