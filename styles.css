@@ -904,6 +904,254 @@ p {
   border: 1px solid var(--border);
 }
 
+/* ── Trust Bar ───────────────────────────────────── */
+.trust-bar {
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.trust-bar .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.trust-bar__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.trust-bar__logos {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.trust-logo {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.trust-logo:hover {
+    opacity: 1;
+}
+
+.trust-divider {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* ── Hero Availability ───────────────────────────── */
+.hero__availability {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 1rem;
+    letter-spacing: 0.02em;
+}
+
+.availability-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ── Engagements ─────────────────────────────────── */
+.engagements {
+    padding: 120px 0;
+}
+
+.engagements__header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.engagements__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .engagements__grid { grid-template-columns: 1fr; }
+}
+
+.engagement-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: border-color 0.25s ease;
+}
+
+.engagement-card:hover {
+    border-color: var(--accent);
+}
+
+.engagement-card__top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.engagement-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+}
+
+.engagement-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.engagement-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.engagement-scope {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+}
+
+.engagement-scope li {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding-left: 1rem;
+    position: relative;
+}
+
+.engagement-scope li::before {
+    content: "–";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+
+.engagement-cta {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    margin-top: auto;
+    transition: letter-spacing 0.2s ease;
+}
+
+.engagement-cta:hover {
+    letter-spacing: 0.1em;
+}
+
+.empire__card-link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: letter-spacing 0.2s ease;
+}
+
+.empire__card-link:hover {
+    letter-spacing: 0.1em;
+}
+
+/* ── Sub-page Nav ────────────────────────────────── */
+.subpage-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.subpage-nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.subpage-nav__back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.subpage-nav__back:hover {
+    color: var(--text-primary);
+}
+
+.subpage-nav__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+}
+
+/* ── Reel Placeholder ────────────────────────────── */
+.reel-placeholder {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 4rem 2rem;
+    margin-top: 2rem;
+}
+
+.reel-placeholder__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
 /* ========================================
    RESPONSIVE
    ======================================== */
