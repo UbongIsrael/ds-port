@@ -16,43 +16,48 @@
             align-items: center;
             gap: 24px;
         }
+
         .nav-minimal img {
             width: 48px;
             height: 48px;
             border-radius: 12px;
         }
+
         .nav-minimal a {
             font-size: 0.9rem;
             color: var(--text-muted);
             transition: color 0.3s var(--ease-out);
         }
+
         .nav-minimal a:hover {
             color: var(--text-primary);
         }
-        
+
         .guides-hero {
             padding-top: 60px;
             padding-bottom: 80px;
         }
+
         .guides-hero .hero__note {
-            margin-top: 32px;
+            margin-top: 10px;
             font-size: 0.9rem;
             color: var(--text-muted);
             font-style: italic;
         }
-        
+
         .guides-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 24px;
             margin-bottom: 120px;
         }
+
         @media (min-width: 768px) {
             .guides-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
+
         .guide-card {
             border: 1px solid #222;
             background: #111;
@@ -63,36 +68,42 @@
             flex-direction: column;
             gap: 12px;
         }
+
         .guide-card:hover {
             border-color: #444;
             background: #141414;
         }
+
         .guide-card h3 {
             margin: 0;
             font-size: 1.1rem;
         }
+
         .guide-card p {
             font-size: 0.9rem;
             color: var(--text-secondary);
             margin: 0;
             flex-grow: 1;
         }
+
         .guide-card a {
             font-size: 0.85rem;
             color: var(--text-primary);
             align-self: flex-start;
         }
-        
+
         /* Skeleton */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
         }
+
         .skeleton-title {
             height: 20px;
             width: 60%;
             background: #222;
             border-radius: 4px;
         }
+
         .skeleton-text {
             height: 14px;
             width: 90%;
@@ -100,10 +111,19 @@
             border-radius: 4px;
             margin-top: 8px;
         }
+
         @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
         }
     </style>
 </head>
@@ -114,10 +134,10 @@
 
     <div class="container">
         <nav class="nav-minimal">
-            <a href="index.html">
+            <a href="/">
                 <img src="ds-logo.png" alt="Digital Sheikh Logo">
             </a>
-            <a href="index.html">← Back to digitalsheikh.co</a>
+            <a href="/">← Back to digitalsheikh.co</a>
         </nav>
     </div>
 
@@ -174,27 +194,27 @@
     <script>
         // Guides Page API Logic
         const API_BASE = 'https://api.github.com/repos/UbongIsrael/Guides/contents';
-        
+
         function formatTitle(folderName) {
             return folderName
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
         }
-        
+
         async function fetchGuides() {
             const heroSubtext = document.getElementById('hero-subtext');
             const guidesGrid = document.getElementById('guides-grid');
-            
+
             try {
                 // 1. Fetch README for hero subtext
                 const readmeRes = await fetch(`${API_BASE}/README.md`);
                 if (!readmeRes.ok) throw new Error('API Rate Limited or Error');
                 const readmeData = await readmeRes.json();
-                
+
                 // Decode base64 utf-8
                 const readmeContent = decodeURIComponent(escape(window.atob(readmeData.content)));
-                
+
                 // Extract first paragraph after `# Guides by Sheikh`
                 // Regex matches anything after # Guides by Sheikh heading, skipping empty lines
                 const paragraphMatch = readmeContent.match(/# Guides by Sheikh\s*\n+([^#\n]+)/i);
@@ -208,12 +228,12 @@
                 const contentsRes = await fetch(API_BASE);
                 if (!contentsRes.ok) throw new Error('API Rate Limited or Error');
                 const contentsData = await contentsRes.json();
-                
+
                 // Filter dirs
                 const folders = contentsData.filter(item => item.type === "dir" && !item.name.startsWith('.'));
-                
+
                 guidesGrid.innerHTML = ''; // clear skeletons
-                
+
                 if (folders.length === 0) {
                     guidesGrid.innerHTML = '<p>No guides found yet.</p>';
                     return;
@@ -237,7 +257,7 @@
                     } catch (e) {
                         description = formatTitle(folder.name);
                     }
-                    
+
                     return `
                         <div class="guide-card reveal reveal-delay-1">
                             <h3>${formatTitle(folder.name)}</h3>
@@ -246,10 +266,10 @@
                         </div>
                     `;
                 });
-                
+
                 const cardsHTML = await Promise.all(guidePromises);
                 guidesGrid.innerHTML = cardsHTML.join('');
-                
+
                 // Trigger scroll reveal on newly added elements
                 const reveals = document.querySelectorAll('.guide-card.reveal');
                 const observer = new IntersectionObserver((entries) => {
@@ -261,7 +281,7 @@
                     });
                 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
                 reveals.forEach((el) => observer.observe(el));
-                
+
             } catch (err) {
                 console.error(err);
                 heroSubtext.textContent = "Guides loading failed.";
@@ -273,7 +293,7 @@
                 `;
             }
         }
-        
+
         fetchGuides();
     </script>
 </body>
