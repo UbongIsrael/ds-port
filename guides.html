@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guides by Sheikh — Field Notes</title>
+    <meta name="description" content="Practical, deployment-tested guides for developers.">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/png" href="ds-logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-minimal {
+            padding: 32px 0;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .nav-minimal img {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+        }
+        .nav-minimal a {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: color 0.3s var(--ease-out);
+        }
+        .nav-minimal a:hover {
+            color: var(--text-primary);
+        }
+        
+        .guides-hero {
+            padding-top: 60px;
+            padding-bottom: 80px;
+        }
+        .guides-hero .hero__note {
+            margin-top: 32px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .guides-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-bottom: 120px;
+        }
+        @media (min-width: 768px) {
+            .guides-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .guide-card {
+            border: 1px solid #222;
+            background: #111;
+            padding: 24px;
+            border-radius: var(--radius);
+            transition: all 0.3s var(--ease-out);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .guide-card:hover {
+            border-color: #444;
+            background: #141414;
+        }
+        .guide-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .guide-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0;
+            flex-grow: 1;
+        }
+        .guide-card a {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            align-self: flex-start;
+        }
+        
+        /* Skeleton */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .skeleton-title {
+            height: 20px;
+            width: 60%;
+            background: #222;
+            border-radius: 4px;
+        }
+        .skeleton-text {
+            height: 14px;
+            width: 90%;
+            background: #222;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Cursor Glow Follower -->
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <div class="container">
+        <nav class="nav-minimal">
+            <a href="index.html">
+                <img src="ds-logo.png" alt="Digital Sheikh Logo">
+            </a>
+            <a href="index.html">← Back to digitalsheikh.co</a>
+        </nav>
+    </div>
+
+    <section class="guides-hero">
+        <div class="container">
+            <p class="section-label">Field Notes</p>
+            <h2>Guides by Sheikh</h2>
+            <p class="hero__body" id="hero-subtext">Loading...</p>
+            <p class="hero__note">Practical guides from real build experience. More added as they're written.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div class="guides-grid" id="guides-grid">
+                <!-- Skeletons -->
+                <div class="guide-card skeleton">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text" style="width: 70%"></div>
+                </div>
+                <div class="guide-card skeleton">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text" style="width: 80%"></div>
+                </div>
+                <div class="guide-card skeleton">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text" style="width: 60%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <p class="footer__copy">&copy; 2026 Digital Sheikh Inc. Abuja.</p>
+                <div class="footer__logo">
+                    <img src="ds-logo.png" alt="DS" class="footer__logo-img">
+                </div>
+                <nav class="footer__links">
+                    <a href="https://www.linkedin.com/in/ubong-israel" target="_blank" rel="noopener">LinkedIn</a>
+                    <a href="https://github.com/UbongIsrael" target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://twitter.com/0xBonge" target="_blank" rel="noopener">Twitter</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Guides Page API Logic
+        const API_BASE = 'https://api.github.com/repos/UbongIsrael/Guides/contents';
+        
+        function formatTitle(folderName) {
+            return folderName
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        
+        async function fetchGuides() {
+            const heroSubtext = document.getElementById('hero-subtext');
+            const guidesGrid = document.getElementById('guides-grid');
+            
+            try {
+                // 1. Fetch README for hero subtext
+                const readmeRes = await fetch(`${API_BASE}/README.md`);
+                if (!readmeRes.ok) throw new Error('API Rate Limited or Error');
+                const readmeData = await readmeRes.json();
+                
+                // Decode base64 utf-8
+                const readmeContent = decodeURIComponent(escape(window.atob(readmeData.content)));
+                
+                // Extract first paragraph after `# Guides by Sheikh`
+                // Regex matches anything after # Guides by Sheikh heading, skipping empty lines
+                const paragraphMatch = readmeContent.match(/# Guides by Sheikh\s*\n+([^#\n]+)/i);
+                if (paragraphMatch && paragraphMatch[1]) {
+                    heroSubtext.textContent = paragraphMatch[1].trim();
+                } else {
+                    heroSubtext.textContent = 'Documentation, notes, and workflows from live deployments.';
+                }
+
+                // 2. Fetch root contents
+                const contentsRes = await fetch(API_BASE);
+                if (!contentsRes.ok) throw new Error('API Rate Limited or Error');
+                const contentsData = await contentsRes.json();
+                
+                // Filter dirs
+                const folders = contentsData.filter(item => item.type === "dir" && !item.name.startsWith('.'));
+                
+                guidesGrid.innerHTML = ''; // clear skeletons
+                
+                if (folders.length === 0) {
+                    guidesGrid.innerHTML = '<p>No guides found yet.</p>';
+                    return;
+                }
+
+                // 3. For each folder, fetch README (parallel)
+                const guidePromises = folders.map(async (folder) => {
+                    let description = 'No description available.';
+                    try {
+                        const fileRes = await fetch(`${API_BASE}/${folder.name}/README.md`);
+                        if (fileRes.ok) {
+                            const fileData = await fileRes.json();
+                            const fileContent = decodeURIComponent(escape(window.atob(fileData.content)));
+                            const blockquoteMatch = fileContent.match(/^>\s*(.+)/m);
+                            if (blockquoteMatch && blockquoteMatch[1]) {
+                                description = blockquoteMatch[1].trim();
+                            }
+                        } else {
+                            description = formatTitle(folder.name);
+                        }
+                    } catch (e) {
+                        description = formatTitle(folder.name);
+                    }
+                    
+                    return `
+                        <div class="guide-card reveal reveal-delay-1">
+                            <h3>${formatTitle(folder.name)}</h3>
+                            <p>${description}</p>
+                            <a href="https://github.com/UbongIsrael/Guides/blob/main/${folder.name}/README.md" target="_blank" rel="noopener">→ View Guide</a>
+                        </div>
+                    `;
+                });
+                
+                const cardsHTML = await Promise.all(guidePromises);
+                guidesGrid.innerHTML = cardsHTML.join('');
+                
+                // Trigger scroll reveal on newly added elements
+                const reveals = document.querySelectorAll('.guide-card.reveal');
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                reveals.forEach((el) => observer.observe(el));
+                
+            } catch (err) {
+                console.error(err);
+                heroSubtext.textContent = "Guides loading failed.";
+                guidesGrid.innerHTML = `
+                    <p style="color: var(--text-secondary); grid-column: 1 / -1;">
+                        Guides loading failed (GitHub API limit) — visit the 
+                        <a href="https://github.com/UbongIsrael/Guides" target="_blank" rel="noopener" style="color: var(--text-primary); text-decoration: underline;">GitHub repo</a> directly.
+                    </p>
+                `;
+            }
+        }
+        
+        fetchGuides();
+    </script>
+</body>
+
+</html>
