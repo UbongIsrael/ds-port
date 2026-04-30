@@ -12,49 +12,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroBody = document.querySelector('.hero__body');
     const heroCta = document.querySelector('.hero__cta');
 
-    // Detect the current page and choose the typewriter string accordingly
-    const page = window.location.pathname;
-    let text = 'I Build the Infrastructure Scaling Startups Run On.'; // default: index
-    if (page.includes('studios')) {
-        text = 'Motion. VFX. 3D.';
-    } else if (page.includes('media')) {
-        text = 'Content that builds empires.';
-    }
-
-    // Hide hero elements below the headline until typewriter finishes
-    [heroSubtitle, heroBody, heroCta].forEach((el) => {
-        if (el) {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(20px)';
-            el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    if (typewriterText) {
+        // Detect the current page and choose the typewriter string accordingly
+        const page = window.location.pathname;
+        let text = 'I Build the Infrastructure Scaling Startups Run On.'; // default: index
+        if (page.includes('studios')) {
+            text = 'Motion. VFX. 3D.';
+        } else if (page.includes('media')) {
+            text = 'Content that builds empires.';
         }
-    });
 
-    let i = 0;
-    const speed = 90; // ms per character
+        // Hide hero elements below the headline until typewriter finishes
+        [heroSubtitle, heroBody, heroCta].forEach((el) => {
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+            }
+        });
 
-    function typeChar() {
-        if (i < text.length) {
-            typewriterText.textContent += text.charAt(i);
-            i++;
-            setTimeout(typeChar, speed);
-        } else {
-            // Typewriter done — reveal the rest of the hero
-            setTimeout(() => {
-                [heroSubtitle, heroBody, heroCta].forEach((el, idx) => {
-                    if (el) {
-                        setTimeout(() => {
-                            el.style.opacity = '1';
-                            el.style.transform = 'translateY(0)';
-                        }, idx * 150);
-                    }
-                });
-            }, 300);
+        let i = 0;
+        const speed = 90; // ms per character
+
+        function typeChar() {
+            if (i < text.length) {
+                typewriterText.textContent += text.charAt(i);
+                i++;
+                setTimeout(typeChar, speed);
+            } else {
+                // Typewriter done — reveal the rest of the hero
+                setTimeout(() => {
+                    [heroSubtitle, heroBody, heroCta].forEach((el, idx) => {
+                        if (el) {
+                            setTimeout(() => {
+                                el.style.opacity = '1';
+                                el.style.transform = 'translateY(0)';
+                            }, idx * 150);
+                        }
+                    });
+                }, 300);
+            }
         }
-    }
 
-    // Start typewriter after a brief pause (let logo fade in first)
-    setTimeout(typeChar, 800);
+        // Start typewriter after a brief pause (let logo fade in first)
+        setTimeout(typeChar, 800);
+    }
 
     // ── Scroll Reveal ──
     const reveals = document.querySelectorAll('.reveal');
