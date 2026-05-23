@@ -111,21 +111,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ──────────── GitHub Repo Fetcher ────────────
+const CACHE_VERSION = '2';
+
 async function fetchGitHubRepos() {
     try {
         const cached = localStorage.getItem('gh_repos');
         const ts = localStorage.getItem('gh_repos_ts');
+        const ver = localStorage.getItem('gh_repos_ver');
 
-        if (cached && ts && Date.now() - Number(ts) < 60 * 60 * 1000) {
+        if (cached && ts && ver === CACHE_VERSION && Date.now() - Number(ts) < 60 * 60 * 1000) {
             const parsed = JSON.parse(cached);
-            // Make sure cached value is actually an array
             if (Array.isArray(parsed)) return parsed;
-            // Otherwise fall through and refetch
         }
+        // Version mismatch or stale — clear old cache
+        localStorage.removeItem('gh_repos');
+        localStorage.removeItem('gh_repos_ts');
+        localStorage.removeItem('gh_repos_ver');
     } catch (e) {
         // Corrupted cache — clear it and refetch
         localStorage.removeItem('gh_repos');
         localStorage.removeItem('gh_repos_ts');
+        localStorage.removeItem('gh_repos_ver');
     }
 
     const res = await fetch('https://api.github.com/users/UbongIsrael/repos?sort=updated&per_page=100');
@@ -134,6 +140,7 @@ async function fetchGitHubRepos() {
     if (!Array.isArray(data)) throw new Error('Unexpected response from GitHub API');
     localStorage.setItem('gh_repos', JSON.stringify(data));
     localStorage.setItem('gh_repos_ts', String(Date.now()));
+    localStorage.setItem('gh_repos_ver', CACHE_VERSION);
     return data;
 }
 
