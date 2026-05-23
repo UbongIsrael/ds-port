@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Sheikh Labs — Projects & Open Source</title>
+    <meta name="description"
+        content="Digital Sheikh Labs projects — open-source tools, AI systems, Web3 experiments, and full-stack applications built by Sheikh Ubong Israel.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://digitalsheikh.co/labs">
+    <meta property="og:title" content="Digital Sheikh Labs — Projects & Open Source">
+    <meta property="og:description" content="Projects, tools, and systems built by Digital Sheikh Labs.">
+    <meta property="og:image" content="https://digitalsheikh.co/assets/og-preview.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://digitalsheikh.co/labs">
+    <meta name="twitter:title" content="Digital Sheikh Labs — Projects & Open Source">
+    <meta name="twitter:description" content="Projects, tools, and systems built by Digital Sheikh Labs.">
+    <meta name="twitter:image" content="https://digitalsheikh.co/assets/og-preview.jpg">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/png" href="assets/ds-logo.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <!-- Inline check to hide hero immediately on detail pages -->
+    <script>
+        if (new URLSearchParams(window.location.search).has('project')) {
+            document.documentElement.style.setProperty('--hero-display', 'none');
+        }
+    </script>
+
+    <!-- ── NAV ───────────────────────────────────── -->
+    <nav class="subpage-nav">
+        <div class="container">
+            <a href="/" class="subpage-nav__back" id="nav-back-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+                Digital Sheikh
+            </a>
+            <span class="subpage-nav__label" id="nav-label">Labs</span>
+        </div>
+    </nav>
+
+    <!-- ── HERO ──────────────────────────────────── -->
+    <section class="hero" id="labs-hero" style="display:var(--hero-display, block);">
+        <div class="container">
+            <div class="hero__content">
+                <div class="hero__logo reveal">
+                    <img src="assets/ds-logo.png" alt="Digital Sheikh Logo" class="hero__logo-img">
+                </div>
+                <p class="section-label reveal reveal-delay-1">Digital Sheikh Labs</p>
+                <h1 class="hero__headline" id="typewriter-headline"><span id="typewriter-text"></span><span
+                        class="typewriter-cursor">|</span></h1>
+                <p class="hero__subtitle reveal reveal-delay-3" id="labs-hero-subtitle">
+                    Open-source tools, AI systems, Web3 experiments, and full-stack applications — built in public.
+                </p>
+                <p class="hero__body reveal reveal-delay-4" id="labs-hero-body">
+                    Every project here started as an itch that needed scratching. Some became grant-funded tools. Others
+                    became production infrastructure. All of them are open source.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── GALLERY VIEW ──────────────────────────── -->
+    <div id="labs-gallery">
+
+        <!-- Featured Carousel -->
+        <section class="carousel-section" id="featured-carousel-section">
+            <div class="container">
+                <div class="carousel__header">
+                    <p class="section-label reveal">Featured</p>
+                    <h2 class="reveal reveal-delay-1">Flagship Projects</h2>
+                    <p class="reveal reveal-delay-2">The ones that define the stack.</p>
+                </div>
+
+                <div class="carousel reveal" id="featured-carousel">
+                    <div class="carousel__track-wrapper">
+                        <div class="carousel__track" id="carousel-track">
+                            <!-- populated by JS -->
+                        </div>
+                    </div>
+                    <button class="carousel__arrow carousel__arrow--left" id="carousel-prev" aria-label="Previous">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 5l-7 7 7 7" />
+                        </svg>
+                    </button>
+                    <button class="carousel__arrow carousel__arrow--right" id="carousel-next" aria-label="Next">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    <div class="carousel__dots" id="carousel-dots">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Projects Grid -->
+        <section class="projects-section" id="all-projects-section">
+            <div class="container">
+                <div class="projects__header">
+                    <p class="section-label reveal">Projects</p>
+                    <h2 class="reveal reveal-delay-1">All Projects</h2>
+                    <p class="reveal reveal-delay-2">Everything else I've built and shipped.</p>
+                </div>
+                <div class="projects-grid" id="projects-grid">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ── DETAIL VIEW ──────────────────────────── -->
+    <div id="labs-detail" style="display:none;">
+        <section class="detail-hero">
+            <div class="container">
+                <a href="/labs" class="detail__back" id="detail-back-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 5l-7 7 7 7" />
+                    </svg>
+                    Back to Labs
+                </a>
+                <div class="detail__header" id="detail-header">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-screenshots" id="detail-screenshots">
+            <div class="container">
+                <div class="screenshot-gallery" id="screenshot-gallery">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-info">
+            <div class="container">
+                <div class="detail__stack" id="detail-stack">
+                    <!-- populated by JS -->
+                </div>
+                <div class="detail__actions" id="detail-actions">
+                    <!-- populated by JS -->
+                </div>
+                <div class="detail__readme" id="detail-readme">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ── FOOTER ────────────────────────────────── -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <p class="footer__copy">&copy; 2026 Digital Sheikh Inc. Abuja.</p>
+                <div class="footer__logo">
+                    <img src="assets/ds-logo.png" alt="DS" class="footer__logo-img">
+                </div>
+                <nav class="footer__links">
+                    <a href="/">Home</a>
+                    <a href="/studios.html">Studios</a>
+                    <a href="/media.html">Media</a>
+                    <a href="/guides.html">Guides</a>
+                    <a href="https://github.com/UbongIsrael" target="_blank" rel="noopener">GitHub</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
