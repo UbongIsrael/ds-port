@@ -112,16 +112,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ──────────── GitHub Repo Fetcher ────────────
 async function fetchGitHubRepos() {
-    const cached = localStorage.getItem('gh_repos');
-    const ts = localStorage.getItem('gh_repos_ts');
+    try {
+        const cached = localStorage.getItem('gh_repos');
+        const ts = localStorage.getItem('gh_repos_ts');
 
-    if (cached && ts && Date.now() - Number(ts) < 60 * 60 * 1000) {
-        return JSON.parse(cached);
+        if (cached && ts && Date.now() - Number(ts) < 60 * 60 * 1000) {
+            const parsed = JSON.parse(cached);
+            // Make sure cached value is actually an array
+            if (Array.isArray(parsed)) return parsed;
+            // Otherwise fall through and refetch
+        }
+    } catch (e) {
+        // Corrupted cache — clear it and refetch
+        localStorage.removeItem('gh_repos');
+        localStorage.removeItem('gh_repos_ts');
     }
 
-    const res = await fetch('https://api.github.com/users/UbongIsrael/repos?sort=updated&per_page=50');
-    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    const res = await fetch('https://api.github.com/users/UbongIsrael/repos?sort=updated&per_page=100');
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status} — ${res.statusText}`);
     const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Unexpected response from GitHub API');
     localStorage.setItem('gh_repos', JSON.stringify(data));
     localStorage.setItem('gh_repos_ts', String(Date.now()));
     return data;
@@ -390,16 +400,24 @@ async function renderProjectGallery() {
         const valid = repos.filter(r => r.description && r.description.trim());
 
         const featured = [];
-        const others = [];
+        const featuredSeen = new Set();
 
+        // Case-insensitive match so capitalisation differences don't break things
         FEATURED_PROJECTS.forEach(name => {
-            const found = valid.find(r => r.name === name);
-            if (found) featured.push(found);
+            const found = valid.find(r => r.name.toLowerCase() === name.toLowerCase());
+            if (found && !featuredSeen.has(found.name)) {
+                featured.push(found);
+                featuredSeen.add(found.name);
+            }
         });
 
-        valid.forEach(r => {
-            if (!FEATURED_PROJECTS.includes(r.name)) others.push(r);
-        });
+        const others = valid.filter(r => !featuredSeen.has(r.name));
+
+        // Fallback: if no featured repos matched, promote the top repos from `others`
+        if (featured.length === 0 && others.length > 0) {
+            const promoted = others.splice(0, Math.min(4, others.length));
+            promoted.forEach(r => featured.push(r));
+        }
 
         buildCarousel(track, dots, featured);
         buildProjectGrid(grid, others);
@@ -419,8 +437,19 @@ async function renderProjectGallery() {
 
         document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     } catch (err) {
-        track.innerHTML = `<div class="labs-skeleton"><p>Failed to load projects. ${err.message}</p></div>`;
-        grid.innerHTML = `<div class="labs-skeleton"><p>Failed to load projects. ${err.message}</p></div>`;
+        console.error('[Labs] Failed to load GitHub repos:', err);
+        const errHtml = `
+            <div class="labs-skeleton" style="text-align:center;padding:40px 20px;">
+                <p style="color:var(--text-secondary);margin-bottom:16px;">
+                    ⚠ Could not load projects: <em>${escapeHtml(err.message)}</em>
+                </p>
+                <button onclick="localStorage.removeItem('gh_repos');localStorage.removeItem('gh_repos_ts');location.reload();"
+                    style="background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:999px;cursor:pointer;font-family:var(--font-body);font-size:0.9rem;">
+                    Retry
+                </button>
+            </div>`;
+        track.innerHTML = errHtml;
+        grid.innerHTML = errHtml;
     }
 }
 
