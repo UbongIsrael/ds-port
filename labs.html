@@ -19,7 +19,7 @@
     <meta name="twitter:image" content="https://digitalsheikh.co/assets/og-preview.jpg">
     <meta name="theme-color" content="#000000">
     <link rel="icon" type="image/png" href="assets/ds-logo.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
 </head>
 
 <body>
@@ -80,10 +80,12 @@
                     <p class="reveal reveal-delay-2">The ones that define the stack.</p>
                 </div>
 
-                <div class="carousel reveal" id="featured-carousel">
-                    <div class="carousel__track-wrapper">
-                        <div class="carousel__track" id="carousel-track">
-                            <!-- populated by JS -->
+                <div class="carousel-wrapper reveal" id="featured-carousel">
+                    <div class="carousel">
+                        <div class="carousel__track-wrapper">
+                            <div class="carousel__track" id="carousel-track">
+                                <!-- populated by JS -->
+                            </div>
                         </div>
                     </div>
                     <button class="carousel__arrow carousel__arrow--left" id="carousel-prev" aria-label="Previous">
@@ -123,24 +125,12 @@
 
     <!-- ── DETAIL VIEW ──────────────────────────── -->
     <div id="labs-detail" style="display:none;">
-        <section class="detail-hero">
+        <section class="detail-screenshots" id="detail-screenshots" style="padding-top:40px;">
             <div class="container">
-                <a href="/labs" class="detail__back" id="detail-back-link">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 12H5M12 5l-7 7 7 7" />
-                    </svg>
-                    Back to Labs
-                </a>
                 <div class="detail__header" id="detail-header">
                     <!-- populated by JS -->
                 </div>
-            </div>
-        </section>
-
-        <section class="detail-screenshots" id="detail-screenshots">
-            <div class="container">
-                <div class="screenshot-gallery" id="screenshot-gallery">
+                <div class="screenshot-gallery" id="screenshot-gallery" style="margin-top:2rem;">
                     <!-- populated by JS -->
                 </div>
             </div>

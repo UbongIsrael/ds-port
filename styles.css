@@ -1264,8 +1264,11 @@ p {
 }
 
 .carousel {
+    /* positioning context managed by .carousel-wrapper */;
+}
+
+.carousel-wrapper {
     position: relative;
-    overflow: hidden;
 }
 
 .carousel__track-wrapper {
@@ -1553,26 +1556,7 @@ p {
 /* ========================================
    LABS PAGE — DETAIL VIEW
    ======================================== */
-.detail-hero {
-    padding-top: 40px;
-    padding-bottom: 60px;
-}
-
-.detail__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-decoration: none;
-    margin-bottom: 2rem;
-    transition: color 0.2s ease;
-}
-
-.detail__back:hover {
-    color: var(--text-primary);
-}
+/* ── no more detail-hero or detail__back — nav handles back button ── */
 
 .detail__header {
     max-width: 720px;
