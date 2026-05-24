@@ -1365,6 +1365,27 @@ p {
     gap: 0.6rem;
 }
 
+.carousel__slide-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+
+.carousel__slide-stars {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.carousel__slide-links {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
 .carousel__arrow {
     position: absolute;
     top: 50%;
@@ -1551,6 +1572,20 @@ p {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+}
+
+.project-card__link {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    margin-left: auto;
+    transition: letter-spacing 0.2s ease;
+}
+
+.project-card__link:hover {
+    letter-spacing: 0.08em;
 }
 
 /* ========================================
@@ -1828,3 +1863,23 @@ p {
         width: 85vw;
     }
 }
+
+/* ── Skeleton / Shimmer ──────────────────────── */
+@keyframes sk-shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+
+.sk-line {
+    display: block;
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-elevated) 40%, var(--bg-elevated) 60%, var(--bg-card) 100%);
+    background-size: 800px 100%;
+    animation: sk-shimmer 1.8s ease-in-out infinite;
+    margin-bottom: 12px;
+}
+
+.sk-line--lg { height: 28px; }
+.sk-line--md { height: 18px; }
+.sk-line--sm { height: 10px; }

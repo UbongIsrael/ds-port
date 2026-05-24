@@ -358,23 +358,22 @@ function escapeHtml(str) {
    LABS PAGE MODULE
    ======================================== */
 
-const FEATURED_PROJECTS = [
-    'lore-agent-marketplace',
-    'trading-intelligence-mcp',
-    'ticketer',
-    'EmailCampaignPro',
-    'meteora-damm-v2-pool-viewer',
-    'Solana-tracker-API-',
-];
-
+const FEATURED_TOPIC = 'ds-featured';
+const UNLISTED_TOPIC = 'ds-unlisted';
 const GITHUB_USER = 'UbongIsrael';
+
+function formatName(name) {
+    return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function visibleTopics(topics) {
+    return (topics || []).filter(t => t !== FEATURED_TOPIC && t !== UNLISTED_TOPIC);
+}
 
 function initLabsPage() {
     const params = new URLSearchParams(window.location.search);
-    const projectName = params.get('project');
-
-    if (projectName) {
-        renderProjectDetail(projectName);
+    if (params.get('project')) {
+        renderProjectDetail(params.get('project'));
     } else {
         renderProjectGallery();
     }
@@ -386,6 +385,7 @@ async function renderProjectGallery() {
     const gallery = document.getElementById('labs-gallery');
     const detail = document.getElementById('labs-detail');
     const hero = document.getElementById('labs-hero');
+    const featuredSection = document.getElementById('featured-carousel-section');
     if (!gallery) return;
 
     gallery.style.display = 'block';
@@ -398,38 +398,23 @@ async function renderProjectGallery() {
     const grid = document.getElementById('projects-grid');
     if (!track || !dots || !grid) return;
 
-    // Show loading
-    track.innerHTML = '<div class="labs-skeleton"><div class="labs-skeleton__spinner"></div><p>Loading projects...</p></div>';
-    grid.innerHTML = '<div class="labs-skeleton"><div class="labs-skeleton__spinner"></div><p>Loading projects...</p></div>';
-
     try {
         const repos = await fetchGitHubRepos();
-        const valid = repos.filter(r => r.description && r.description.trim());
 
-        const featured = [];
-        const featuredSeen = new Set();
-
-        // Case-insensitive match so capitalisation differences don't break things
-        FEATURED_PROJECTS.forEach(name => {
-            const found = valid.find(r => r.name.toLowerCase() === name.toLowerCase());
-            if (found && !featuredSeen.has(found.name)) {
-                featured.push(found);
-                featuredSeen.add(found.name);
-            }
+        const featured = repos.filter(r => r.topics && r.topics.includes(FEATURED_TOPIC));
+        const regular = repos.filter(r => {
+            const topics = r.topics || [];
+            return !topics.includes(FEATURED_TOPIC) && !topics.includes(UNLISTED_TOPIC);
         });
 
-        const others = valid.filter(r => !featuredSeen.has(r.name));
-
-        // Fallback: if no featured repos matched, promote the top repos from `others`
-        if (featured.length === 0 && others.length > 0) {
-            const promoted = others.splice(0, Math.min(4, others.length));
-            promoted.forEach(r => featured.push(r));
+        // Hide featured section if no featured repos
+        if (featuredSection) {
+            featuredSection.style.display = featured.length ? '' : 'none';
         }
 
         buildCarousel(track, dots, featured);
-        buildProjectGrid(grid, others);
+        buildProjectGrid(grid, regular);
 
-        // Re-observe reveal elements
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -446,14 +431,12 @@ async function renderProjectGallery() {
     } catch (err) {
         console.error('[Labs] Failed to load GitHub repos:', err);
         const errHtml = `
-            <div class="labs-skeleton" style="text-align:center;padding:40px 20px;">
-                <p style="color:var(--text-secondary);margin-bottom:16px;">
-                    ⚠ Could not load projects: <em>${escapeHtml(err.message)}</em>
+            <div class="labs-skeleton" style="text-align:center;padding:60px 20px;">
+                <p style="color:var(--text-secondary);margin-bottom:16px;max-width:480px;margin-left:auto;margin-right:auto;">
+                    Couldn't load projects right now — check back soon or visit
+                    <a href="https://github.com/UbongIsrael" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">GitHub</a>
+                    directly.
                 </p>
-                <button onclick="localStorage.removeItem('gh_repos');localStorage.removeItem('gh_repos_ts');location.reload();"
-                    style="background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:999px;cursor:pointer;font-family:var(--font-body);font-size:0.9rem;">
-                    Retry
-                </button>
             </div>`;
         track.innerHTML = errHtml;
         grid.innerHTML = errHtml;
@@ -468,36 +451,42 @@ let carouselSlides = 0;
 
 function buildCarousel(track, dots, repos) {
     if (!repos.length) {
-        track.innerHTML = '<div class="labs-skeleton"><p>No featured projects yet.</p></div>';
+        track.innerHTML = '';
         return;
     }
 
     carouselSlides = repos.length;
     carouselIndex = 0;
 
-    // Build slides
     track.innerHTML = repos.map(repo => {
-        const topics = (repo.topics || []).slice(0, 4);
+        const topics = visibleTopics(repo.topics).slice(0, 4);
         const stackHtml = topics.map(t => `<span>${escapeHtml(t)}</span>`).join('');
+        const stars = repo.stargazers_count || 0;
+        const name = formatName(repo.name);
+
         return `
             <div class="carousel__slide" data-repo="${escapeHtml(repo.name)}">
                 <div class="carousel__slide-top">
-                    <span class="carousel__slide-name">${escapeHtml(repo.name)}</span>
+                    <span class="carousel__slide-name">${escapeHtml(name)}</span>
                     ${repo.language ? `<span class="carousel__slide-lang">${escapeHtml(repo.language)}</span>` : ''}
                 </div>
-                <p class="carousel__slide-desc">${escapeHtml(truncate(repo.description, 200))}</p>
+                <p class="carousel__slide-desc">${escapeHtml(repo.description || '')}</p>
                 ${stackHtml ? `<div class="carousel__slide-stack">${stackHtml}</div>` : ''}
-                <span class="carousel__slide-link">View Project →</span>
+                <div class="carousel__slide-footer">
+                    ${stars > 0 ? `<span class="carousel__slide-stars">★ ${stars}</span>` : ''}
+                    <div class="carousel__slide-links">
+                        ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="carousel__slide-link" onclick="event.stopPropagation();">Live Demo →</a>` : ''}
+                        <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="carousel__slide-link" onclick="event.stopPropagation();">View on GitHub →</a>
+                    </div>
+                </div>
             </div>
         `;
     }).join('');
 
-    // Build dots
     dots.innerHTML = repos.map((_, i) =>
         `<button class="carousel__dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`
     ).join('');
 
-    // Click handlers
     track.querySelectorAll('.carousel__slide').forEach(slide => {
         slide.addEventListener('click', () => {
             const name = slide.dataset.repo;
@@ -505,13 +494,11 @@ function buildCarousel(track, dots, repos) {
         });
     });
 
-    // Arrow handlers
     const prev = document.getElementById('carousel-prev');
     const next = document.getElementById('carousel-next');
     if (prev) prev.addEventListener('click', () => { stopCarousel(); prevSlide(); startCarousel(); });
     if (next) next.addEventListener('click', () => { stopCarousel(); nextSlide(); startCarousel(); });
 
-    // Dot handlers
     dots.querySelectorAll('.carousel__dot').forEach(dot => {
         dot.addEventListener('click', () => {
             const idx = parseInt(dot.dataset.index);
@@ -521,7 +508,6 @@ function buildCarousel(track, dots, repos) {
         });
     });
 
-    // Pause on hover
     const wrapper = track.closest('.carousel');
     if (wrapper) {
         wrapper.addEventListener('mouseenter', stopCarousel);
@@ -569,32 +555,32 @@ function stopCarousel() {
 
 function buildProjectGrid(grid, repos) {
     if (!repos.length) {
-        grid.innerHTML = '<div class="labs-skeleton"><p>No additional projects yet.</p></div>';
+        grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px 0;grid-column:1/-1;">No additional projects yet.</p>';
         return;
     }
 
     grid.innerHTML = repos.map(repo => {
-        const topics = (repo.topics || []).slice(0, 3);
+        const topics = visibleTopics(repo.topics).slice(0, 3);
         const stackHtml = topics.map(t => `<span>${escapeHtml(t)}</span>`).join('');
         const stars = repo.stargazers_count || 0;
+        const name = formatName(repo.name);
 
         return `
             <div class="project-card reveal" data-repo="${escapeHtml(repo.name)}">
                 <div class="project-card__top">
-                    <span class="project-card__name">${escapeHtml(repo.name)}</span>
+                    <span class="project-card__name">${escapeHtml(name)}</span>
                     ${repo.language ? `<span class="project-card__lang">${escapeHtml(repo.language)}</span>` : ''}
                 </div>
-                <p class="project-card__desc">${escapeHtml(repo.description)}</p>
+                <p class="project-card__desc">${escapeHtml(repo.description || '')}</p>
                 ${stackHtml ? `<div class="project-card__stack">${stackHtml}</div>` : ''}
                 <div class="project-card__stats">
                     ${stars > 0 ? `<span>★ ${stars}</span>` : ''}
-                    <span>${repo.forks_count || 0} forks</span>
+                    ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="project-card__link" onclick="event.stopPropagation();">Live Demo</a>` : ''}
                 </div>
             </div>
         `;
     }).join('');
 
-    // Click handlers
     grid.querySelectorAll('.project-card').forEach(card => {
         card.addEventListener('click', () => {
             const name = card.dataset.repo;
@@ -799,11 +785,6 @@ function renderMarkdown(text) {
     html = html.replace(/<p><br><\/p>/g, '');
 
     return html;
-}
-
-function truncate(str, max) {
-    if (str.length <= max) return str;
-    return str.slice(0, max).replace(/\s+\S*$/, '') + '…';
 }
 
 // ──────────── Init on labs page ────────────
