@@ -159,7 +159,8 @@ function backgroundRefreshRepos() {
         // silent — user has cached data already
     });
 }
-    const parts = [];
+
+function buildStack(repo) {
     if (repo.language) parts.push(repo.language);
     if (repo.topics && repo.topics.length) {
         repo.topics.slice(0, 2).forEach(t =>
