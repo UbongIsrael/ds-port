@@ -112,26 +112,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ──────────── GitHub Repo Fetcher ────────────
 const CACHE_VERSION = '2';
+let reposChangedCallbacks = [];
 
-async function fetchGitHubRepos() {
-    try {
-        const cached = localStorage.getItem('gh_repos');
-        const ts = localStorage.getItem('gh_repos_ts');
-        const ver = localStorage.getItem('gh_repos_ver');
+function onReposChanged(cb) {
+    reposChangedCallbacks.push(cb);
+}
 
-        if (cached && ts && ver === CACHE_VERSION && Date.now() - Number(ts) < 60 * 60 * 1000) {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) return parsed;
+async function fetchGitHubRepos(forceFetch) {
+    // Cache-first: return immediately if available (any age)
+    if (!forceFetch) {
+        try {
+            const cached = localStorage.getItem('gh_repos');
+            const ver = localStorage.getItem('gh_repos_ver');
+            if (cached && ver === CACHE_VERSION) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch (e) {
+            localStorage.removeItem('gh_repos');
+            localStorage.removeItem('gh_repos_ver');
+            localStorage.removeItem('gh_repos_ts');
         }
-        // Version mismatch or stale — clear old cache
-        localStorage.removeItem('gh_repos');
-        localStorage.removeItem('gh_repos_ts');
-        localStorage.removeItem('gh_repos_ver');
-    } catch (e) {
-        // Corrupted cache — clear it and refetch
-        localStorage.removeItem('gh_repos');
-        localStorage.removeItem('gh_repos_ts');
-        localStorage.removeItem('gh_repos_ver');
     }
 
     const res = await fetch('https://api.github.com/users/UbongIsrael/repos?sort=updated&per_page=100');
@@ -139,12 +140,25 @@ async function fetchGitHubRepos() {
     const data = await res.json();
     if (!Array.isArray(data)) throw new Error('Unexpected response from GitHub API');
     localStorage.setItem('gh_repos', JSON.stringify(data));
-    localStorage.setItem('gh_repos_ts', String(Date.now()));
     localStorage.setItem('gh_repos_ver', CACHE_VERSION);
+    localStorage.setItem('gh_repos_ts', String(Date.now()));
     return data;
 }
 
-function buildStack(repo) {
+function backgroundRefreshRepos() {
+    const oldRaw = localStorage.getItem('gh_repos');
+    const old = oldRaw ? JSON.parse(oldRaw) : null;
+
+    fetchGitHubRepos(true).then(fresh => {
+        const oldStr = JSON.stringify((old || []).map(r => r.name + r.description));
+        const newStr = JSON.stringify(fresh.map(r => r.name + r.description));
+        if (oldStr !== newStr) {
+            reposChangedCallbacks.forEach(cb => cb(fresh));
+        }
+    }).catch(() => {
+        // silent — user has cached data already
+    });
+}
     const parts = [];
     if (repo.language) parts.push(repo.language);
     if (repo.topics && repo.topics.length) {
@@ -414,6 +428,23 @@ async function renderProjectGallery() {
 
         buildCarousel(track, dots, featured);
         buildProjectGrid(grid, regular);
+
+        // Register background refresh — silently updates on next visit
+        stopCarousel();
+        const currentFeatured = featured;
+        const currentRegular = regular;
+        onReposChanged(fresh => {
+            const feat = fresh.filter(r => r.topics && r.topics.includes(FEATURED_TOPIC));
+            const reg = fresh.filter(r => {
+                const t = r.topics || [];
+                return !t.includes(FEATURED_TOPIC) && !t.includes(UNLISTED_TOPIC);
+            });
+            if (featuredSection) featuredSection.style.display = feat.length ? '' : 'none';
+            buildCarousel(track, dots, feat);
+            buildProjectGrid(grid, reg);
+            document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        });
+        backgroundRefreshRepos();
 
         const observer = new IntersectionObserver(
             (entries) => {
