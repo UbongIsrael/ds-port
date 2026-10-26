@@ -1,88 +1,29 @@
 /* ========================================
    DIGITAL SHEIKH — script.js
-   Typewriter + Scroll Reveals + Terminal
+   Scroll Reveals + Project Gallery + Terminal
    ======================================== */
 
 // ──────────── On Load ────────────
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Typewriter Animation ──
-    const typewriterText = document.getElementById('typewriter-text');
-    const heroSubtitle = document.querySelector('.hero__subtitle');
-    const heroBody = document.querySelector('.hero__body');
-    const heroCta = document.querySelector('.hero__cta');
-
-    if (typewriterText) {
-        // Detect the current page and choose the typewriter string accordingly
-        const page = window.location.pathname;
-        let text = 'I Build the Infrastructure Scaling Startups Run On.'; // default: index
-        if (page.includes('studios')) {
-            text = 'Motion. VFX. 3D.';
-        } else if (page.includes('media')) {
-            text = 'Content that builds empires.';
-        } else if (page.includes('labs')) {
-            text = 'Built in public. Shipped in production.';
-        }
-
-        // Hide hero elements below the headline until typewriter finishes
-        [heroSubtitle, heroBody, heroCta].forEach((el) => {
-            if (el) {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-            }
-        });
-
-        let i = 0;
-        const speed = 90; // ms per character
-
-        function typeChar() {
-            if (i < text.length) {
-                typewriterText.textContent += text.charAt(i);
-                i++;
-                setTimeout(typeChar, speed);
-            } else {
-                // Typewriter done — reveal the rest of the hero
-                setTimeout(() => {
-                    [heroSubtitle, heroBody, heroCta].forEach((el, idx) => {
-                        if (el) {
-                            setTimeout(() => {
-                                el.style.opacity = '1';
-                                el.style.transform = 'translateY(0)';
-                            }, idx * 150);
-                        }
-                    });
-                }, 300);
-            }
-        }
-
-        // Start typewriter after a brief pause (let logo fade in first)
-        setTimeout(typeChar, 800);
-    }
-
-    // ── Scroll Reveal ──
-    const reveals = document.querySelectorAll('.reveal');
-
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        },
-        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    reveals.forEach((el) => observer.observe(el));
+    // Keep the headline and calls to action readable from the first paint.
+    // Only reveal offscreen content, with a short animation before it enters view.
+    observeReveals(document);
+    initProductMarks();
+    const tickerPause = document.querySelector('.marquee-pause');
+    tickerPause?.addEventListener('click', () => {
+        const paused = tickerPause.getAttribute('aria-pressed') !== 'true';
+        tickerPause.setAttribute('aria-pressed', String(paused));
+        tickerPause.setAttribute('aria-label', paused ? 'Play technology ticker' : 'Pause technology ticker');
+        tickerPause.firstElementChild.textContent = paused ? '▷' : 'Ⅱ';
+    });
 
     // ── Terminal ──
     initTerminal();
 
     // ── Cursor Glow Follower ──
     const glow = document.getElementById('cursor-glow');
-    if (glow) {
+    if (glow && !window.matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches) {
         let mouseX = 0, mouseY = 0;
         let glowX = 0, glowY = 0;
 
@@ -102,8 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Smooth lerp for buttery follow
             glowX += (mouseX - glowX) * 0.15;
             glowY += (mouseY - glowY) * 0.15;
-            glow.style.left = glowX + 'px';
-            glow.style.top = glowY + 'px';
+            glow.style.transform = `translate(${glowX}px, ${glowY}px) translate(-50%, -50%)`;
             requestAnimationFrame(animateGlow);
         }
         animateGlow();
@@ -111,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ──────────── GitHub Repo Fetcher ────────────
-const CACHE_VERSION = '2';
+const CACHE_VERSION = '3';
 let reposChangedCallbacks = [];
 
 function onReposChanged(cb) {
@@ -161,9 +101,10 @@ function backgroundRefreshRepos() {
 }
 
 function buildStack(repo) {
+    const parts = [];
     if (repo.language) parts.push(repo.language);
     if (repo.topics && repo.topics.length) {
-        repo.topics.slice(0, 2).forEach(t =>
+        visibleTopics(repo.topics).slice(0, 2).forEach(t =>
             parts.push(t.charAt(0).toUpperCase() + t.slice(1))
         );
     }
@@ -178,29 +119,33 @@ function initTerminal() {
 
     if (!input || !output) return;
 
-    input.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            const cmd = input.value.trim().toLowerCase();
-            if (!cmd) return;
+    let busy = false;
+    async function runCommand(value) {
+        const cmd = value.trim().toLowerCase();
+        if (!cmd || busy) return;
+        busy = true;
+        appendLine(`<span class="prompt-prefix">sheikh@labs:~$</span> ${escapeHtml(value.trim())}`, 'terminal__line--prompt');
+        input.value = '';
+        if (cmd === 'ls') {
+            appendLine('Fetching repos…', 'terminal__line--muted');
+        }
+        const response = cmd === 'ls' ? await lsOutput() : processCommand(cmd);
+        renderTerminalOutput(response, output, body);
+        busy = false;
+    }
 
-            // Echo the command
-            appendLine(`<span class="prompt-prefix">sheikh@labs:~$</span> ${escapeHtml(input.value.trim())}`, 'terminal__line--prompt');
-            input.value = '';
-
-            // ls is async — handle separately
-            if (cmd === 'ls') {
-                appendLine('fetching repos...', 'terminal__line--muted', true);
-                const response = await lsOutput();
-                typewriterOutput(response, output, body);
-            } else {
-                const response = processCommand(cmd);
-                typewriterOutput(response, output, body);
-            }
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') runCommand(input.value);
+    });
+    document.querySelectorAll('[data-terminal-command]').forEach(button => {
+        button.addEventListener('click', () => runCommand(button.dataset.terminalCommand));
+    });
+    // Preserve links, text selection, and touch scrolling inside the terminal.
+    body.addEventListener('click', (event) => {
+        if (!event.target.closest('a, button') && !window.getSelection().toString()) {
+            input.focus({ preventScroll: true });
         }
     });
-
-    // Focus terminal on click
-    body.addEventListener('click', () => input.focus());
 }
 
 function processCommand(cmd) {
@@ -239,7 +184,7 @@ async function lsOutput() {
     try {
         const repos = await fetchGitHubRepos();
         githubProjects = repos
-            .filter((repo) => repo.description && repo.description.trim() !== '')
+            .filter((repo) => repo.description && repo.description.trim() !== '' && !(repo.topics || []).includes(UNLISTED_TOPIC))
             .map((repo) => ({
                 name: repo.name,
                 stack: buildStack(repo),
@@ -261,9 +206,9 @@ async function lsOutput() {
   </div>`;
     projects.forEach((p) => {
         tableHtml += `<div class="terminal__table-row">
-      <span class="project-name">${p.name}</span>
-      <span class="project-stack">${p.stack}</span>
-      <span class="project-desc">${p.desc}</span>
+      <span class="project-name">${escapeHtml(p.name)}</span>
+      <span class="project-stack">${escapeHtml(p.stack)}</span>
+      <span class="project-desc">${escapeHtml(p.desc)}</span>
     </div>`;
     });
     tableHtml += '</div>';
@@ -312,35 +257,20 @@ function helpOutput() {
 
 // ──────────── Rendering Helpers ────────────
 
-function typewriterOutput(lines, outputEl, bodyEl) {
+function renderTerminalOutput(lines, outputEl, bodyEl) {
     if (lines === '__CLEAR__') {
-        outputEl.innerHTML = '';
+        outputEl.replaceChildren();
         return;
     }
-
-    let delay = 0;
-    const increment = 40; // ms between lines
-
-    lines.forEach((line) => {
-        setTimeout(() => {
-            if (line.html) {
-                const div = document.createElement('div');
-                div.innerHTML = line.html;
-                div.style.opacity = '0';
-                div.style.transform = 'translateY(4px)';
-                div.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                outputEl.appendChild(div);
-                requestAnimationFrame(() => {
-                    div.style.opacity = '1';
-                    div.style.transform = 'translateY(0)';
-                });
-            } else {
-                appendLine(line.text || '', line.cls || '', true);
-            }
-            bodyEl.scrollTop = bodyEl.scrollHeight;
-        }, delay);
-        delay += increment;
+    const fragment = document.createDocumentFragment();
+    lines.forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'terminal__line' + (line.cls ? ' ' + line.cls : '');
+        div.innerHTML = line.html || line.text || '';
+        fragment.appendChild(div);
     });
+    outputEl.appendChild(fragment);
+    bodyEl.scrollTop = bodyEl.scrollHeight;
 }
 
 function appendLine(text, cls, animate) {
@@ -378,11 +308,71 @@ const UNLISTED_TOPIC = 'ds-unlisted';
 const GITHUB_USER = 'UbongIsrael';
 
 function formatName(name) {
-    return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const names = {
+        'trading-intelligence-mcp': 'Trading Intelligence MCP',
+        'lore-agent-marketplace': 'Lore Agent Marketplace',
+        'EmailCampaignPro': 'Email Campaign Pro',
+        'easysend': 'EasySend',
+        'billmi': 'billmi',
+    };
+    if (names[name]) return names[name];
+    return name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_+]+/g, ' ')
+        .replace(/\b[a-z0-9]+\b/gi, word => {
+            const acronyms = ['ai', 'api', 'mcp', 'sdk', 'nft', 'llm', 'vfx', 'ms', 'html', 'git'];
+            return acronyms.includes(word.toLowerCase()) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1);
+        });
+}
+
+function observeReveals(root) {
+    const elements = root.querySelectorAll('.reveal:not(.visible)');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+        elements.forEach(el => el.classList.add('visible'));
+        return;
+    }
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.remove('is-pending');
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '0px 0px 80px 0px', threshold: 0 });
+    elements.forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight) {
+            el.classList.add('visible');
+        } else {
+            el.classList.add('is-pending');
+            observer.observe(el);
+        }
+    });
+}
+
+// Small product marks add identity without inventing screenshots or metrics.
+function projectMark(name, className = 'project-mark') {
+    const paths = [
+        '<path d="M4 18l6-7 5 3 7-9M17 5h5v5"/>',
+        '<rect x="5" y="5" width="16" height="16" rx="5"/><path d="M9 11h.01M17 11h.01M10 16h6M13 2v3"/>',
+        '<rect x="3" y="5" width="20" height="16" rx="3"/><path d="M3 7l10 7 10-7"/>',
+        '<path d="M4 7a3 3 0 013-3h12a3 3 0 013 3v3a3 3 0 000 6v3a3 3 0 01-3 3H7a3 3 0 01-3-3v-3a3 3 0 000-6zM16 7v2M16 12v2M16 17v2"/>',
+        '<path d="M8 3h10l3 3v17l-4-2-4 2-4-2-4 2V6zM9 10h8M9 14h8M9 18h4"/>',
+        '<path d="M4 20h18M7 20V9l6-5 6 5v11M11 20v-6h4v6"/>',
+        '<path d="M9 7l-6 6 6 6M17 7l6 6-6 6M15 4l-4 18"/>',
+    ];
+    const lower = name.toLowerCase();
+    const index = lower.includes('trading') ? 0 : lower.includes('lore') ? 1 : lower.includes('email') ? 2 : lower.includes('ticket') ? 3 : lower.includes('bill') ? 4 : lower.includes('kruis') ? 5 : 6;
+    return `<span class="${className}" aria-hidden="true"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${paths[index]}</svg></span>`;
+}
+
+function initProductMarks() {
+    document.querySelectorAll('.product-card').forEach(card => {
+        const name = card.querySelector('.product-name').textContent;
+        card.insertAdjacentHTML('afterbegin', projectMark(name));
+    });
 }
 
 function visibleTopics(topics) {
-    return (topics || []).filter(t => t !== FEATURED_TOPIC && t !== UNLISTED_TOPIC);
+    return (topics || []).filter(t => !t.startsWith('ds-'));
 }
 
 function initLabsPage() {
@@ -430,10 +420,7 @@ async function renderProjectGallery() {
         buildCarousel(track, dots, featured);
         buildProjectGrid(grid, regular);
 
-        // Register background refresh — silently updates on next visit
-        stopCarousel();
-        const currentFeatured = featured;
-        const currentRegular = regular;
+        // Keep cached project data fresh in the background.
         onReposChanged(fresh => {
             const feat = fresh.filter(r => r.topics && r.topics.includes(FEATURED_TOPIC));
             const reg = fresh.filter(r => {
@@ -447,19 +434,7 @@ async function renderProjectGallery() {
         });
         backgroundRefreshRepos();
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-        );
-
-        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+        observeReveals(gallery);
     } catch (err) {
         console.error('[Labs] Failed to load GitHub repos:', err);
         const errHtml = `
@@ -477,110 +452,91 @@ async function renderProjectGallery() {
 
 // ── Carousel ──
 
-let carouselInterval = null;
 let carouselIndex = 0;
 let carouselSlides = 0;
+let carouselResizeObserver;
 
 function buildCarousel(track, dots, repos) {
-    if (!repos.length) {
-        track.innerHTML = '';
-        return;
-    }
-
+    carouselResizeObserver?.disconnect();
     carouselSlides = repos.length;
     carouselIndex = 0;
-
+    const wrapper = track.parentElement;
+    wrapper.scrollLeft = 0;
     track.innerHTML = repos.map(repo => {
         const topics = visibleTopics(repo.topics).slice(0, 4);
-        const stackHtml = topics.map(t => `<span>${escapeHtml(t)}</span>`).join('');
-        const stars = repo.stargazers_count || 0;
         const name = formatName(repo.name);
-
         return `
-            <div class="carousel__slide" data-repo="${escapeHtml(repo.name)}">
+            <article class="carousel__slide">
                 <div class="carousel__slide-top">
-                    <span class="carousel__slide-name">${escapeHtml(name)}</span>
+                    ${projectMark(repo.name)}
                     ${repo.language ? `<span class="carousel__slide-lang">${escapeHtml(repo.language)}</span>` : ''}
                 </div>
-                <p class="carousel__slide-desc">${escapeHtml(repo.description || '')}</p>
-                ${stackHtml ? `<div class="carousel__slide-stack">${stackHtml}</div>` : ''}
+                <h3 class="carousel__slide-name"><a href="/labs?project=${encodeURIComponent(repo.name)}">${escapeHtml(name)}</a></h3>
+                <p class="carousel__slide-desc">${escapeHtml(repo.description || 'Explore the source, documentation, and project details.')}</p>
+                ${topics.length ? `<div class="carousel__slide-stack">${topics.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>` : ''}
                 <div class="carousel__slide-footer">
-                    ${stars > 0 ? `<span class="carousel__slide-stars">★ ${stars}</span>` : ''}
-                    <div class="carousel__slide-links">
-                        ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="carousel__slide-link" onclick="event.stopPropagation();">Live Demo →</a>` : ''}
-                        <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="carousel__slide-link" onclick="event.stopPropagation();">View on GitHub →</a>
-                    </div>
+                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="carousel__slide-link">Explore Project ↗</a>
+                    <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="carousel__source-link">GitHub ↗</a>
                 </div>
-            </div>
-        `;
+            </article>`;
     }).join('');
 
-    dots.innerHTML = repos.map((_, i) =>
-        `<button class="carousel__dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`
+    dots.innerHTML = repos.map((repo, i) =>
+        `<button type="button" class="carousel__dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Show ${escapeHtml(formatName(repo.name))}" aria-current="${i === 0 ? 'true' : 'false'}"></button>`
     ).join('');
-
-    track.querySelectorAll('.carousel__slide').forEach(slide => {
-        slide.addEventListener('click', () => {
-            const name = slide.dataset.repo;
-            window.location.href = `/labs?project=${encodeURIComponent(name)}`;
-        });
+    dots.querySelectorAll('button').forEach(dot => {
+        dot.addEventListener('click', () => goToSlide(Number(dot.dataset.index)));
     });
-
     const prev = document.getElementById('carousel-prev');
     const next = document.getElementById('carousel-next');
-    if (prev) prev.addEventListener('click', () => { stopCarousel(); prevSlide(); startCarousel(); });
-    if (next) next.addEventListener('click', () => { stopCarousel(); nextSlide(); startCarousel(); });
-
-    dots.querySelectorAll('.carousel__dot').forEach(dot => {
-        dot.addEventListener('click', () => {
-            const idx = parseInt(dot.dataset.index);
-            stopCarousel();
-            goToSlide(idx);
-            startCarousel();
-        });
-    });
-
-    const wrapper = track.closest('.carousel');
-    if (wrapper) {
-        wrapper.addEventListener('mouseenter', stopCarousel);
-        wrapper.addEventListener('mouseleave', startCarousel);
+    if (prev) prev.onclick = () => goToSlide(carouselIndex - 1);
+    if (next) next.onclick = () => goToSlide(carouselIndex + 1);
+    wrapper.onscroll = () => updateCarouselState();
+    wrapper.onkeydown = event => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+            event.preventDefault();
+            goToSlide(carouselIndex + (event.key === 'ArrowRight' ? 1 : -1));
+        }
+    };
+    if ('ResizeObserver' in window) {
+        carouselResizeObserver = new ResizeObserver(() => updateCarouselState());
+        carouselResizeObserver.observe(wrapper);
     }
+    updateCarouselState();
+}
 
-    startCarousel();
+function updateCarouselState() {
+    const track = document.getElementById('carousel-track');
+    const wrapper = track.parentElement;
+    const slides = Array.from(track.children);
+    const first = slides[0];
+    if (!first) return;
+    const maxScroll = wrapper.scrollWidth - wrapper.clientWidth;
+    let closestDistance = Infinity;
+    slides.forEach((slide, index) => {
+        const distance = Math.abs(wrapper.scrollLeft - (slide.offsetLeft - first.offsetLeft));
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            carouselIndex = index;
+        }
+    });
+    document.querySelectorAll('.carousel__dot').forEach((dot, i) => {
+        dot.hidden = slides[i].offsetLeft - first.offsetLeft > maxScroll + 2;
+        dot.classList.toggle('active', i === carouselIndex);
+        dot.setAttribute('aria-current', String(i === carouselIndex));
+    });
+    document.getElementById('carousel-prev').disabled = wrapper.scrollLeft <= 2;
+    document.getElementById('carousel-next').disabled = wrapper.scrollLeft >= maxScroll - 2;
 }
 
 function goToSlide(index) {
     const track = document.getElementById('carousel-track');
-    const dots = document.getElementById('carousel-dots');
-    if (!track || !dots) return;
-
-    carouselIndex = index;
-    track.style.transform = `translateX(-${index * 100}%)`;
-
-    dots.querySelectorAll('.carousel__dot').forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
+    const slide = track.children[Math.max(0, Math.min(index, carouselSlides - 1))];
+    if (!slide) return;
+    track.parentElement.scrollTo({
+        left: slide.offsetLeft - track.firstElementChild.offsetLeft,
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
     });
-}
-
-function nextSlide() {
-    goToSlide((carouselIndex + 1) % carouselSlides);
-}
-
-function prevSlide() {
-    goToSlide((carouselIndex - 1 + carouselSlides) % carouselSlides);
-}
-
-function startCarousel() {
-    if (carouselSlides <= 1) return;
-    stopCarousel();
-    carouselInterval = setInterval(nextSlide, 5000);
-}
-
-function stopCarousel() {
-    if (carouselInterval) {
-        clearInterval(carouselInterval);
-        carouselInterval = null;
-    }
 }
 
 // ── Project Grid ──
@@ -598,27 +554,23 @@ function buildProjectGrid(grid, repos) {
         const name = formatName(repo.name);
 
         return `
-            <div class="project-card reveal" data-repo="${escapeHtml(repo.name)}">
+            <article class="project-card reveal">
+                ${projectMark(repo.name)}
                 <div class="project-card__top">
-                    <span class="project-card__name">${escapeHtml(name)}</span>
+                    <h3 class="project-card__name"><a href="/labs?project=${encodeURIComponent(repo.name)}">${escapeHtml(name)}</a></h3>
                     ${repo.language ? `<span class="project-card__lang">${escapeHtml(repo.language)}</span>` : ''}
                 </div>
-                <p class="project-card__desc">${escapeHtml(repo.description || '')}</p>
+                <p class="project-card__desc">${escapeHtml(repo.description || 'Explore the source, documentation, and project details.')}</p>
                 ${stackHtml ? `<div class="project-card__stack">${stackHtml}</div>` : ''}
                 <div class="project-card__stats">
                     ${stars > 0 ? `<span>★ ${stars}</span>` : ''}
-                    ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="project-card__link" onclick="event.stopPropagation();">Live Demo</a>` : ''}
+                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="project-card__link">View Project ↗</a>
+                    ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="project-card__demo">Live Demo ↗</a>` : ''}
                 </div>
-            </div>
+            </article>
         `;
     }).join('');
 
-    grid.querySelectorAll('.project-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const name = card.dataset.repo;
-            window.location.href = `/labs?project=${encodeURIComponent(name)}`;
-        });
-    });
 }
 
 // ──────────── DETAIL VIEW ────────────
@@ -635,7 +587,7 @@ async function renderProjectDetail(repoName) {
     if (detail) detail.style.display = 'block';
     document.documentElement.style.setProperty('--hero-display', 'none');
 
-    if (navLabel) navLabel.textContent = repoName;
+    if (navLabel) navLabel.textContent = formatName(repoName);
     if (navBack) {
         navBack.href = '/labs';
         navBack.innerHTML = `
@@ -664,11 +616,11 @@ async function renderProjectDetail(repoName) {
         const repo = await res.json();
 
         // Basic info
-        document.title = `${repo.name} — Digital Sheikh Labs`;
+        document.title = `${formatName(repo.name)} — Digital Sheikh Labs`;
 
         if (header) {
             header.innerHTML = `
-                <h1 class="detail__title">${escapeHtml(repo.name)}</h1>
+                <h1 class="detail__title">${escapeHtml(formatName(repo.name))}</h1>
                 <p class="detail__description">${escapeHtml(repo.description || 'No description provided.')}</p>
                 <div class="detail__meta">
                     ${repo.language ? `<span>${escapeHtml(repo.language)}</span>` : ''}
@@ -685,7 +637,7 @@ async function renderProjectDetail(repoName) {
         }
 
         // Tech stack
-        const topics = repo.topics || [];
+        const topics = visibleTopics(repo.topics);
         if (stack) {
             const allTags = [repo.language, ...topics].filter(Boolean);
             stack.innerHTML = allTags.map(t => `<span>${escapeHtml(t)}</span>`).join('');
@@ -726,8 +678,7 @@ async function renderProjectDetail(repoName) {
             }
         }
 
-        // Update URL without page reload
-        window.history.pushState({ project: repoName }, repoName, `/labs?project=${encodeURIComponent(repoName)}`);
+
 
     } catch (err) {
         if (header) header.innerHTML = `<div class="labs-skeleton"><p>Failed to load project. ${err.message}</p></div>`;
@@ -769,9 +720,12 @@ async function loadScreenshots(container, repoName) {
 function renderMarkdown(text) {
     let html = text;
 
-    // Code blocks
+    // Protect fenced code from later heading/list/emphasis replacements.
+    const codeBlocks = [];
     html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-        return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
+        const index = codeBlocks.length;
+        codeBlocks.push(`<pre><code class="language-${escapeHtml(lang)}">${escapeHtml(code.trim())}</code></pre>`);
+        return `DSCODEBLOCK${index}END`;
     });
 
     // Inline code
@@ -793,7 +747,7 @@ function renderMarkdown(text) {
     html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
 
     // Unordered lists
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
@@ -816,6 +770,7 @@ function renderMarkdown(text) {
     html = html.replace(/<\/p>\n*<p><\/p>/g, '</p><p>');
     html = html.replace(/<p><br><\/p>/g, '');
 
+    html = html.replace(/DSCODEBLOCK(\d+)END/g, (_, index) => codeBlocks[Number(index)]);
     return html;
 }
 
