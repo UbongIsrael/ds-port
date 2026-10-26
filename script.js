@@ -452,6 +452,13 @@ async function renderProjectGallery() {
 
 // ── Carousel ──
 
+function projectStars(repo) {
+    const count = Number(repo.stargazers_count) || 0;
+    return count > 0
+        ? `<span class="project-card__stars" aria-label="${count} GitHub ${count === 1 ? 'star' : 'stars'}"><span aria-hidden="true">★</span> ${count}</span>`
+        : '<span class="project-card__stars"></span>';
+}
+
 let carouselIndex = 0;
 let carouselSlides = 0;
 let carouselResizeObserver;
@@ -475,7 +482,8 @@ function buildCarousel(track, dots, repos) {
                 <p class="carousel__slide-desc">${escapeHtml(repo.description || 'Explore the source, documentation, and project details.')}</p>
                 ${topics.length ? `<div class="carousel__slide-stack">${topics.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>` : ''}
                 <div class="carousel__slide-footer">
-                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="carousel__slide-link">Explore Project ↗</a>
+                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="carousel__slide-link">Explore Project</a>
+                    ${projectStars(repo)}
                     <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="carousel__source-link">GitHub ↗</a>
                 </div>
             </article>`;
@@ -550,7 +558,6 @@ function buildProjectGrid(grid, repos) {
     grid.innerHTML = repos.map(repo => {
         const topics = visibleTopics(repo.topics).slice(0, 3);
         const stackHtml = topics.map(t => `<span>${escapeHtml(t)}</span>`).join('');
-        const stars = repo.stargazers_count || 0;
         const name = formatName(repo.name);
 
         return `
@@ -562,10 +569,11 @@ function buildProjectGrid(grid, repos) {
                 </div>
                 <p class="project-card__desc">${escapeHtml(repo.description || 'Explore the source, documentation, and project details.')}</p>
                 ${stackHtml ? `<div class="project-card__stack">${stackHtml}</div>` : ''}
+                ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="project-card__demo">Live Demo ↗</a>` : ''}
                 <div class="project-card__stats">
-                    ${stars > 0 ? `<span>★ ${stars}</span>` : ''}
-                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="project-card__link">View Project ↗</a>
-                    ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" target="_blank" rel="noopener" class="project-card__demo">Live Demo ↗</a>` : ''}
+                    <a href="/labs?project=${encodeURIComponent(repo.name)}" class="project-card__link">Explore Project</a>
+                    ${projectStars(repo)}
+                    <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="project-card__source">GitHub ↗</a>
                 </div>
             </article>
         `;

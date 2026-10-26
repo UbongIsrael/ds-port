@@ -1388,23 +1388,26 @@ p {
     overflow-wrap: anywhere;
 }
 .carousel__slide-footer, .project-card__stats {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
     padding-top: 18px;
     border-top: 1px solid var(--border);
     margin-top: auto;
 }
 .carousel__slide-link, .project-card__link {
+    justify-self: start;
     color: var(--accent);
     font-size: 0.8rem;
     font-weight: 600;
     padding: 4px 0;
 }
-.carousel__source-link, .project-card__demo { font-size: 0.78rem; color: var(--text-secondary); padding: 4px 0; }
-.carousel__source-link:hover, .project-card__demo:hover { color: #fff; }
+.carousel__source-link, .project-card__source, .project-card__demo { font-size: 0.78rem; color: var(--text-secondary); padding: 4px 0; }
+.carousel__source-link, .project-card__source { justify-self: end; white-space: nowrap; }
+.carousel__source-link:hover, .project-card__source:hover, .project-card__demo:hover { color: #fff; }
+.project-card__stars { justify-self: center; color: var(--text-muted); font: 400 0.75rem var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.project-card__demo { align-self: flex-start; }
 .carousel__arrow {
     position: absolute;
     bottom: 0;
