@@ -1,0 +1,14 @@
+{
+  "captured_on": "2026-10-27",
+  "screenshots": {
+    "ticketer": "https://ticketer.dsforge.co",
+    "emailcampaign": "https://emailcampaign.dsforge.co",
+    "walletscan": "https://walletscan.dsforge.co",
+    "hedgemaker": "https://hedgemaker.dsforge.co",
+    "lore": "https://lore.dsforge.co"
+  },
+  "artwork": {
+    "versuswords": "https://github.com/UbongIsrael/Versus-Words/tree/main/apps/web/public"
+  },
+  "illustrations": "Original SVG diagrams; illustrative, not product screenshots."
+}

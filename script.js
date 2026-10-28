@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only reveal offscreen content, with a short animation before it enters view.
     observeReveals(document);
     initProductMarks();
+    initLiveDemoGrid();
     const tickerPause = document.querySelector('.marquee-pause');
     tickerPause?.addEventListener('click', () => {
         const paused = tickerPause.getAttribute('aria-pressed') !== 'true';
@@ -314,6 +315,8 @@ function formatName(name) {
         'EmailCampaignPro': 'Email Campaign Pro',
         'easysend': 'EasySend',
         'billmi': 'billmi',
+        'hedgemaker': 'HedgeMaker',
+        'walletscan': 'WalletScan',
     };
     if (names[name]) return names[name];
     return name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_+]+/g, ' ')
@@ -348,8 +351,63 @@ function observeReveals(root) {
     });
 }
 
+// Curated visuals are local assets, so gallery images do not depend on third-party services.
+const PROJECT_VISUALS = [
+    { aliases: ['ticketer'], repo: 'ticketer', name: 'Ticketer', key: 'ticketer', image: 'ticketer.webp', demo: 'https://ticketer.dsforge.co', label: 'Event experiences', mark: 'T' },
+    { aliases: ['emailcampaignpro', 'emailcampaign'], repo: 'EmailCampaignPro', name: 'Email Campaign Pro', key: 'emailcampaign', image: 'emailcampaign.webp', demo: 'https://emailcampaign.dsforge.co', label: 'Campaign → Worker → SMTP', mark: '✉' },
+    { aliases: ['walletscan'], repo: 'walletscan', name: 'WalletScan', key: 'walletscan', image: 'walletscan.webp', demo: 'https://walletscan.dsforge.co', label: 'Wallet intelligence', mark: 'W' },
+    { aliases: ['versuswords'], repo: 'Versus-Words', name: 'Versus Words', key: 'versuswords', image: 'versuswords-trace.webp', demo: 'https://versuswords.dsforge.co', label: 'Multiplayer word game' },
+    { aliases: ['hedgemaker'], repo: 'hedgemaker', name: 'HedgeMaker', key: 'hedgemaker', image: 'hedgemaker.webp', demo: 'https://hedgemaker.dsforge.co', label: 'USD / NGN · Monad testnet', mark: 'H' },
+    { aliases: ['lore', 'loreagentmarketplace'], repo: 'lore-agent-marketplace', name: 'Lore', key: 'lore', image: 'lore.webp', demo: 'https://lore.dsforge.co', label: 'AI agent marketplace', mark: '◆' },
+    { aliases: ['tradingintelligence', 'tradingintelligencemcp'], repo: 'trading-intelligence-mcp', name: 'Trading Intelligence MCP', key: 'trading', image: 'trading-intelligence.svg', label: 'MCP · market intelligence' },
+    { aliases: ['guides'], repo: 'Guides', name: 'Field Notes & Guides', key: 'guides', image: 'guides.svg', label: 'Build. Deploy. Document.' },
+    { aliases: ['billmi'], name: 'billmi', key: 'billmi', image: 'billmi.svg', label: 'In development' },
+    { aliases: ['kruis'], name: 'Kruis', key: 'kruis', image: 'kruis.svg', label: 'In development' },
+];
+
+const PUBLIC_DEMOS = [{
+    name: 'walletscan', private: true, html_url: null, homepage: 'https://walletscan.dsforge.co',
+    description: 'Wallet intelligence for finding repeat early winners. Scan token contracts, compare early entries, and save recurring wallets.',
+    topics: ['wallet-intelligence'], stargazers_count: 0,
+}];
+
+function getProjectVisual(name) {
+    const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return PROJECT_VISUALS.find(visual => visual.aliases.includes(key));
+}
+
+function withPortfolioDemos(repos) {
+    const all = [...repos, ...PUBLIC_DEMOS.filter(demo => !repos.some(repo => repo.name.toLowerCase() === demo.name))];
+    return all.map(repo => ({ ...repo, homepage: getProjectVisual(repo.name)?.demo || repo.homepage, description: repo.description || (repo.name.toLowerCase() === 'hedgemaker' ? 'A USD/NGN hedging prototype on Monad testnet. Explore market views, maturity dates, and buyer/seller workflows.' : repo.description) }));
+}
+
+function projectSourceLink(repo, className) {
+    return repo.html_url
+        ? `<a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="${className}">GitHub ↗</a>`
+        : `<span class="${className} project-source--private">Private source</span>`;
+}
+
+function projectCover(name) {
+    const visual = getProjectVisual(name);
+    if (!visual) {
+        return `<a class="project-cover project-cover--blueprint" href="/labs?project=${encodeURIComponent(name)}" aria-label="Explore ${escapeHtml(formatName(name))}"><div class="project-cover__blueprint" aria-hidden="true"><svg viewBox="0 0 320 160" fill="none"><g stroke="#ff713f" stroke-opacity=".3"><circle cx="160" cy="80" r="58"/><circle cx="160" cy="80" r="76"/><path d="M0 80h102M218 80h102M160 0v22M160 138v22"/></g><path d="M140 60l-20 20 20 20M180 60l20 20-20 20M168 51l-16 58" stroke="#ff713f" stroke-width="2"/></svg></div><span class="project-cover__label">Code &amp; systems</span></a>`;
+    }
+    const content = visual.key === 'versuswords'
+        ? `<div class="project-cover__tiles"><img src="assets/projects/versuswords-trace.webp" alt="Versus Words Trace game artwork" width="525" height="700" loading="lazy" decoding="async"><img src="assets/projects/versuswords-anagrams.webp" alt="Versus Words Anagrams game artwork" width="525" height="700" loading="lazy" decoding="async"></div>`
+        : `<div class="project-cover__window${visual.image.endsWith('.svg') ? ' project-cover__window--diagram' : ''}">${visual.image.endsWith('.svg') ? '' : `<div class="project-cover__chrome" aria-hidden="true"><i></i><i></i><i></i><span>${new URL(visual.demo).hostname}</span></div>`}<img src="assets/projects/${visual.image}" alt="${escapeHtml(visual.name)} ${visual.image.endsWith('.svg') ? 'concept diagram' : 'public demo screenshot'}" width="1200" height="750" loading="lazy" decoding="async"></div>`;
+    const inner = `${content}<span class="project-cover__label">${escapeHtml(visual.label)}</span>`;
+    return visual.repo
+        ? `<a class="project-cover project-cover--${visual.key}" href="/labs?project=${encodeURIComponent(visual.repo)}" aria-label="Explore ${escapeHtml(visual.name)}">${inner}</a>`
+        : `<div class="project-cover project-cover--${visual.key}">${inner}</div>`;
+}
+
 // Small product marks add identity without inventing screenshots or metrics.
 function projectMark(name, className = 'project-mark') {
+    const visual = getProjectVisual(name);
+    if (visual?.key === 'versuswords') {
+        return `<span class="${className} project-mark--image" aria-hidden="true"><img src="assets/projects/versuswords-logo.webp" alt="" width="48" height="48" loading="lazy"></span>`;
+    }
+    if (visual?.mark) return `<span class="${className} project-mark--${visual.key}" aria-hidden="true">${visual.mark}</span>`;
     const paths = [
         '<path d="M4 18l6-7 5 3 7-9M17 5h5v5"/>',
         '<rect x="5" y="5" width="16" height="16" rx="5"/><path d="M9 11h.01M17 11h.01M10 16h6M13 2v3"/>',
@@ -367,8 +425,22 @@ function projectMark(name, className = 'project-mark') {
 function initProductMarks() {
     document.querySelectorAll('.product-card').forEach(card => {
         const name = card.querySelector('.product-name').textContent;
-        card.insertAdjacentHTML('afterbegin', projectMark(name));
+        card.insertAdjacentHTML('afterbegin', projectCover(name) + projectMark(name));
     });
+}
+
+function initLiveDemoGrid() {
+    const grid = document.getElementById('live-demo-grid');
+    if (!grid) return;
+    grid.innerHTML = ['walletscan', 'Versus-Words', 'hedgemaker'].map(name => {
+        const visual = getProjectVisual(name);
+        return `<article class="demo-card">${projectCover(name)}<div class="demo-card__info"><h3><a href="/labs?project=${encodeURIComponent(visual.repo)}">${escapeHtml(visual.name)}</a></h3><a href="${visual.demo}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(visual.name)} demo">Live Demo ↗</a></div></article>`;
+    }).join('');
+}
+
+function guideCover(folderName) {
+    const desktop = folderName.toLowerCase().includes('desktop');
+    return `<div class="guide-cover"><img src="assets/projects/${desktop ? 'guide-desktop.svg' : 'guide-cloud.svg'}" alt="${desktop ? 'Linux server connected to a browser through VNC' : 'Cloud GPU connected to a local AI coding agent'}" width="1200" height="750" loading="lazy" decoding="async"></div>`;
 }
 
 function visibleTopics(topics) {
@@ -404,13 +476,13 @@ async function renderProjectGallery() {
     if (!track || !dots || !grid) return;
 
     try {
-        const repos = await fetchGitHubRepos();
+        const repos = withPortfolioDemos(await fetchGitHubRepos());
 
         const featured = repos.filter(r => r.topics && r.topics.includes(FEATURED_TOPIC));
         const regular = repos.filter(r => {
             const topics = r.topics || [];
             return !topics.includes(FEATURED_TOPIC) && !topics.includes(UNLISTED_TOPIC);
-        });
+        }).sort((a, b) => Number(Boolean(getProjectVisual(b.name))) - Number(Boolean(getProjectVisual(a.name))));
 
         // Hide featured section if no featured repos
         if (featuredSection) {
@@ -421,12 +493,13 @@ async function renderProjectGallery() {
         buildProjectGrid(grid, regular);
 
         // Keep cached project data fresh in the background.
-        onReposChanged(fresh => {
+        onReposChanged(repos => {
+            const fresh = withPortfolioDemos(repos);
             const feat = fresh.filter(r => r.topics && r.topics.includes(FEATURED_TOPIC));
             const reg = fresh.filter(r => {
                 const t = r.topics || [];
                 return !t.includes(FEATURED_TOPIC) && !t.includes(UNLISTED_TOPIC);
-            });
+            }).sort((a, b) => Number(Boolean(getProjectVisual(b.name))) - Number(Boolean(getProjectVisual(a.name))));
             if (featuredSection) featuredSection.style.display = feat.length ? '' : 'none';
             buildCarousel(track, dots, feat);
             buildProjectGrid(grid, reg);
@@ -474,6 +547,7 @@ function buildCarousel(track, dots, repos) {
         const name = formatName(repo.name);
         return `
             <article class="carousel__slide">
+                ${projectCover(repo.name)}
                 <div class="carousel__slide-top">
                     ${projectMark(repo.name)}
                     ${repo.language ? `<span class="carousel__slide-lang">${escapeHtml(repo.language)}</span>` : ''}
@@ -484,7 +558,7 @@ function buildCarousel(track, dots, repos) {
                 <div class="carousel__slide-footer">
                     <a href="/labs?project=${encodeURIComponent(repo.name)}" class="carousel__slide-link">Explore Project</a>
                     ${projectStars(repo)}
-                    <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="carousel__source-link">GitHub ↗</a>
+                    ${projectSourceLink(repo, 'carousel__source-link')}
                 </div>
             </article>`;
     }).join('');
@@ -562,6 +636,7 @@ function buildProjectGrid(grid, repos) {
 
         return `
             <article class="project-card reveal">
+                ${projectCover(repo.name)}
                 ${projectMark(repo.name)}
                 <div class="project-card__top">
                     <h3 class="project-card__name"><a href="/labs?project=${encodeURIComponent(repo.name)}">${escapeHtml(name)}</a></h3>
@@ -573,7 +648,7 @@ function buildProjectGrid(grid, repos) {
                 <div class="project-card__stats">
                     <a href="/labs?project=${encodeURIComponent(repo.name)}" class="project-card__link">Explore Project</a>
                     ${projectStars(repo)}
-                    <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="project-card__source">GitHub ↗</a>
+                    ${projectSourceLink(repo, 'project-card__source')}
                 </div>
             </article>
         `;
@@ -619,9 +694,13 @@ async function renderProjectDetail(repoName) {
 
     try {
         // Fetch individual repo details
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${repoName}`);
-        if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
-        const repo = await res.json();
+        let repo = PUBLIC_DEMOS.find(demo => demo.name === repoName);
+        if (!repo) {
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${repoName}`);
+            if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+            repo = await res.json();
+        }
+        repo = { ...repo, homepage: getProjectVisual(repoName)?.demo || repo.homepage };
 
         // Basic info
         document.title = `${formatName(repo.name)} — Digital Sheikh Labs`;
@@ -632,9 +711,7 @@ async function renderProjectDetail(repoName) {
                 <p class="detail__description">${escapeHtml(repo.description || 'No description provided.')}</p>
                 <div class="detail__meta">
                     ${repo.language ? `<span>${escapeHtml(repo.language)}</span>` : ''}
-                    <span>★ ${repo.stargazers_count || 0}</span>
-                    <span>${repo.forks_count || 0} forks</span>
-                    <span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>
+                    ${repo.private ? '<span>Public demo · Private source</span>' : `<span>★ ${repo.stargazers_count || 0}</span><span>${repo.forks_count || 0} forks</span><span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>`}
                 </div>
             `;
         }
@@ -664,7 +741,7 @@ async function renderProjectDetail(repoName) {
                     View Project
                 </a>`;
             }
-            buttonsHtml += `<a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="btn btn--outline">
+            if (repo.html_url) buttonsHtml += `<a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener" class="btn btn--outline">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.08 1.85 1.24 1.85 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6.02 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.93.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
                 </svg>
@@ -674,7 +751,9 @@ async function renderProjectDetail(repoName) {
         }
 
         // README
-        if (readme) {
+        if (readme && repo.private) {
+            readme.innerHTML = '<h2>Wallet intelligence</h2><p>Scan a token contract, review early wallet entries, and keep a collection of wallets that recur across tokens. Explore the public scanner using the live demo above.</p>';
+        } else if (readme) {
             const readmeRes = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${repoName}/readme`, {
                 headers: { 'Accept': 'application/vnd.github.v3.raw' }
             });
@@ -694,6 +773,12 @@ async function renderProjectDetail(repoName) {
 }
 
 async function loadScreenshots(container, repoName) {
+    const visual = getProjectVisual(repoName);
+    if (visual) {
+        const images = visual.key === 'versuswords' ? ['versuswords-trace.webp', 'versuswords-anagrams.webp'] : [visual.image];
+        container.innerHTML = images.map(image => `<div class="screenshot-gallery__item"><img src="assets/projects/${image}" alt="${escapeHtml(visual.name)} project preview" width="1200" height="750" loading="lazy" decoding="async"></div>`).join('');
+        return;
+    }
     try {
         // Try to list screenshots from repo's assets/screenshots directory
         const contentsRes = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${repoName}/contents/assets/screenshots`);

@@ -23,7 +23,7 @@
 
     <meta name="theme-color" content="#000000">
     <link rel="icon" type="image/png" href="assets/ds-logo.png">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
     <style>
         .nav-minimal {
             padding: 32px 0;
@@ -208,7 +208,7 @@
         </div>
     </footer>
 
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=4"></script>
     <script>
         // Guides Page API Logic
         const API_BASE = 'https://api.github.com/repos/UbongIsrael/Guides/contents';
@@ -283,6 +283,7 @@
 
                     return `
                         <div class="guide-card reveal reveal-delay-1">
+                            ${guideCover(folder.name)}
                             <h3>${escapeHtml(formatTitle(folder.name))}</h3>
                             <p>${escapeHtml(description)}</p>
                             <a href="https://github.com/UbongIsrael/Guides/blob/main/${encodeURIComponent(folder.name)}/README.md" target="_blank" rel="noopener">→ View Guide</a>
