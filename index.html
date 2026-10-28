@@ -24,7 +24,7 @@
 
     <meta name="theme-color" content="#000000">
     <link rel="icon" type="image/png" href="assets/ds-logo.png">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 
 <body>
@@ -48,8 +48,8 @@
     </header>
     <main id="main">
     <!-- ============ HERO ============ -->
-    <section class="hero">
-        <div class="container">
+    <section class="hero hero--visual">
+        <div class="container hero__layout">
             <div class="hero__content">
                 <p class="section-label reveal reveal-delay-1">Work With Me</p>
                 <h1 class="hero__headline" id="typewriter-headline"><span id="typewriter-text">I Build the Infrastructure Scaling Startups Run On.</span><span
@@ -86,6 +86,23 @@
                     Have a project in mind? Get in touch for availability.
                 </p>
             </div>
+            <figure class="hero-system" aria-label="Architecture sketch connecting APIs, AI agents, data, and automation">
+                <div class="hero-system__bar"><span class="hero-system__light" aria-hidden="true"></span><span>ENGINEERED TO CONNECT</span><span aria-hidden="true">↗</span></div>
+                <div class="hero-system__canvas">
+                    <svg class="hero-system__connections" viewBox="0 0 440 390" fill="none" aria-hidden="true">
+                        <defs><radialGradient id="system-glow"><stop stop-color="#ff4500" stop-opacity=".2"/><stop offset="1" stop-color="#ff4500" stop-opacity="0"/></radialGradient></defs>
+                        <circle cx="220" cy="195" r="190" fill="url(#system-glow)"/>
+                        <g stroke="#ff713f" stroke-opacity=".65"><path d="M110 90L220 195 330 90M110 300L220 195 330 300"/><circle cx="220" cy="195" r="112" stroke-opacity=".18"/><circle cx="220" cy="195" r="152" stroke-opacity=".08"/></g>
+                        <g fill="#ff713f"><circle cx="166" cy="143" r="4"/><circle cx="274" cy="143" r="4"/><circle cx="166" cy="247" r="4"/><circle cx="274" cy="247" r="4"/></g>
+                    </svg>
+                    <div class="hero-system__node hero-system__node--api"><span class="hero-system__symbol" aria-hidden="true">{ }</span><strong>APIs</strong><span>TypeScript · Python</span></div>
+                    <div class="hero-system__node hero-system__node--agents"><span class="hero-system__symbol" aria-hidden="true">✦</span><strong>AI Agents</strong><span>MCP · orchestration</span></div>
+                    <div class="hero-system__core" aria-hidden="true"><img src="assets/ds-logo.png" alt="" width="64" height="64"></div>
+                    <div class="hero-system__node hero-system__node--data"><span class="hero-system__symbol" aria-hidden="true">≡</span><strong>Data</strong><span>PostgreSQL · Redis</span></div>
+                    <div class="hero-system__node hero-system__node--workflows"><span class="hero-system__symbol" aria-hidden="true">↗</span><strong>Automation</strong><span>Workers · workflows</span></div>
+                </div>
+                <figcaption><span>connect<span aria-hidden="true"> → </span>orchestrate<span aria-hidden="true"> → </span>ship</span><span>Architecture sketch</span></figcaption>
+            </figure>
         </div>
     </section>
 
@@ -167,15 +184,8 @@
             <div class="marquee-wrapper reveal">
                 <button class="marquee-pause" type="button" aria-label="Pause technology ticker" aria-pressed="false"><span aria-hidden="true">Ⅱ</span></button>
                 <div class="marquee-track" id="marquee-track">
-                    <span>TypeScript</span><span>Node.js</span><span>Python</span><span>React</span><span>Next.js</span>
-                    <span>PostgreSQL</span><span>Redis</span><span>Docker</span><span>AWS</span><span>Solidity</span>
-                    <span>n8n</span><span>Model Context Protocol</span><span>Alpha Vantage</span><span>Solana
-                        Web3.js</span>
-                    <!-- Duplicated for seamless loop -->
-                    <span>TypeScript</span><span>Node.js</span><span>Python</span><span>React</span><span>Next.js</span>
-                    <span>PostgreSQL</span><span>Redis</span><span>Docker</span><span>AWS</span><span>Solidity</span>
-                    <span>n8n</span><span>Model Context Protocol</span><span>Alpha Vantage</span><span>Solana
-                        Web3.js</span>
+                    <div class="marquee__group"><span><img src="assets/stack/typescript.svg" alt="" width="22" height="22" loading="lazy">TypeScript</span><span><img src="assets/stack/nodedotjs.svg" alt="" width="22" height="22" loading="lazy">Node.js</span><span><img src="assets/stack/python.svg" alt="" width="22" height="22" loading="lazy">Python</span><span><img src="assets/stack/react.svg" alt="" width="22" height="22" loading="lazy">React</span><span><img src="assets/stack/postgresql.svg" alt="" width="22" height="22" loading="lazy">PostgreSQL</span><span><img src="assets/stack/docker.svg" alt="" width="22" height="22" loading="lazy">Docker</span></div>
+                    <div class="marquee__group" aria-hidden="true"><span><img src="assets/stack/typescript.svg" alt="" width="22" height="22" loading="lazy">TypeScript</span><span><img src="assets/stack/nodedotjs.svg" alt="" width="22" height="22" loading="lazy">Node.js</span><span><img src="assets/stack/python.svg" alt="" width="22" height="22" loading="lazy">Python</span><span><img src="assets/stack/react.svg" alt="" width="22" height="22" loading="lazy">React</span><span><img src="assets/stack/postgresql.svg" alt="" width="22" height="22" loading="lazy">PostgreSQL</span><span><img src="assets/stack/docker.svg" alt="" width="22" height="22" loading="lazy">Docker</span></div>
                 </div>
             </div>
         </div>
@@ -273,6 +283,10 @@
                 </div>
             </div>
 
+            <div class="live-experiments reveal">
+                <div class="live-experiments__header"><h3>More from the lab</h3><p>Games, wallet tools, and on-chain experiments.</p></div>
+                <div class="demo-grid" id="live-demo-grid"></div>
+            </div>
             <div class="products-footer reveal">
                 <a href="/labs" class="products-footer__link">
                     See All Projects
@@ -508,7 +522,7 @@
         </div>
     </footer>
 
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=4"></script>
 </body>
 
 </html>

@@ -1,0 +1,12 @@
+{
+  "source": "https://github.com/simple-icons/simple-icons/tree/develop/icons",
+  "license": "CC0-1.0",
+  "icons": [
+    "typescript",
+    "nodedotjs",
+    "python",
+    "react",
+    "postgresql",
+    "docker"
+  ]
+}
